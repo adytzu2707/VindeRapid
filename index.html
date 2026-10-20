@@ -96,7 +96,7 @@ async function incarca() {
     afiseaza();
   } catch (e) {
     lista.textContent = "Nu s-au putut încărca anunțurile. Verifică cheia publică și setările tabelului Supabase.";
-    console.error(e);
+    console.error(e);alert("Eroare: " + err.message);
   }
 }
 
