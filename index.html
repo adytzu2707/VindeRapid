@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VindeRapid — Anunțuri</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:16px Arial,sans-serif;background:#f2f5fa;color:#17243a}
+header{background:linear-gradient(120deg,#155bd4,#12a6d8);color:white;padding:25px 16px}
+main{max-width:900px;margin:20px auto;padding:0 14px}
+h1{margin:0 0 8px;font-size:30px}
+h2{font-size:21px}
+.panel,.ad{background:white;border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 3px 12px #0000000c}
+input,select,textarea,button{width:100%;padding:12px;margin:5px 0;border:1px solid #d5dce7;border-radius:9px;font-size:16px}
+button{background:#1769e0;color:white;border:0;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.price{color:#1769e0;font-size:21px;font-weight:bold}
+.small{font-size:13px;color:#687386}
+</style>
+</head>
+<body>
+<header>
+<h1>⚡ VindeRapid</h1>
+<p>Cumperi și vinzi simplu, rapid și aproape de tine.</p>
+<input id="q" placeholder="Ce cauți?" oninput="showAds()">
+<select id="cat" onchange="showAds()">
+<option value="">Toate categoriile</option>
+<option>Electronice</option><option>Auto</option>
+<option>Casă și grădină</option><option>Modă</option><option>Altele</option>
+</select>
+</header>
+<main>
+<section class="panel">
+<h2>Publică un anunț</h2>
+<form id="form">
+<input id="title" placeholder="Titlul anunțului" required>
+<input id="price" type="number" min="0" placeholder="Preț în lei" required>
+<select id="category">
+<option>Electronice</option><option>Auto</option>
+<option>Casă și grădină</option><option>Modă</option><option>Altele</option>
+</select>
+<input id="city" placeholder="Localitate">
+<textarea id="desc" placeholder="Descrierea produsului"></textarea>
+<button type="submit">Adaugă anunț</button>
+</form>
+</section>
+<h2>Anunțuri disponibile</h2>
+<div id="ads" class="grid"></div>
+<section class="panel">
+<h2>Promovează-ți anunțul</h2>
+<p>Promovare 3 zile — 5 lei</p>
+<p>Promovare 7 zile — 10 lei</p>
+<p>Promovare 30 zile — 20 lei</p>
+<p class="small">Prețuri demonstrative. Plățile online nu sunt încă activate.</p>
+</section>
+<section class="panel small">
+VindeRapid — versiune inițială. În această versiune, anunțurile adăugate sunt salvate în browserul dispozitivului. Pentru conturi, anunțuri vizibile tuturor și plăți reale va fi nevoie de servicii suplimentare.
+</section>
+</main>
+<script>
+let ads=[];
+try{ads=JSON.parse(localStorage.getItem("vinderapid_ads")||"[]")}catch(e){}
+function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function showAds(){
+let q=document.getElementById("q").value.toLowerCase();
+let cat=document.getElementById("cat").value;
+let list=ads.filter(a=>(a.title+" "+a.desc+" "+a.city).toLowerCase().includes(q)&&(!cat||a.category===cat));
+document.getElementById("ads").innerHTML=list.map(a=>'<article class="ad"><h3>'+safe(a.title)+'</h3><div class="price">'+safe(a.price)+' lei</div><p>'+safe(a.desc)+'</p><div class="small">'+safe(a.category)+' · '+safe(a.city||"România")+'</div></article>').join("")||'<p>Nu există anunțuri. Adaugă primul anunț!</p>';
+}
+document.getElementById("form").addEventListener("submit",function(e){
+e.preventDefault();
+ads.unshift({title:document.getElementById("title").value,price:document.getElementById("price").value,category:document.getElementById("category").value,city:document.getElementById("city").value,desc:document.getElementById("desc").value});
+try{localStorage.setItem("vinderapid_ads",JSON.stringify(ads))}catch(e){}
+this.reset();showAds();
+});
+showAds();
+</script>
+</body>
+</html>
