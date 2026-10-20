@@ -153,6 +153,45 @@
         lista.textContent = "Momentan nu există anunțuri.";
         return;
       }
+async function incarcaFotografie(fisier) {
+  if (!fisier) return null;
+
+  if (!fisier.type.startsWith("image/")) {
+    throw new Error("Selectează un fișier imagine.");
+  }
+
+  if (fisier.size > 5 * 1024 * 1024) {
+    throw new Error("Fotografia trebuie să aibă maximum 5 MB.");
+  }
+
+  const numeFisier =
+    Date.now() + "-" +
+    fisier.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const raspuns = await fetch(
+    URL_SUPABASE + "/storage/v1/object/poze-anunturi/" +
+      numeFisier,
+    {
+      method: "POST",
+      headers: {
+        apikey: CHEIE_PUBLICA,
+        Authorization: "Bearer " + CHEIE_PUBLICA,
+        "Content-Type": fisier.type
+      },
+      body: fisier
+    }
+  );
+
+  if (!raspuns.ok) {
+    throw new Error("Încărcarea fotografiei: " +
+      await raspuns.text());
+  }
+
+  return URL_SUPABASE +
+    "/storage/v1/object/public/poze-anunturi/" +
+    numeFisier;
+}
+
 
       anunturi.forEach(function(a) {
         const card = document.createElement("article");
