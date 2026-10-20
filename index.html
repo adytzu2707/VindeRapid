@@ -127,7 +127,7 @@ document.getElementById("form").addEventListener("submit", async e => {
     e.target.reset();
     await incarca();
   } catch (err) {
-    mesaj.textContent = "Publicarea a eșuat. Verifică politicile și permisiunile Supabase.";
+    mesaj.textContent = " mesaj.textContent = "Eroare: " + err.message;";
     console.error(err);
   }
 });
