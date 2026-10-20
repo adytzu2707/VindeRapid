@@ -243,13 +243,19 @@ async function incarcaFotografie(fisier) {
         return;
       }
 
-      const anunt = {
-        titlu: titlu,
-        descriere: document.getElementById("descriere").value.trim(),
-        pret: pret,
-        categorie: document.getElementById("categorie").value,
-        localitate: document.getElementById("localitate").value.trim()
-      };
+      const anunt = { 
+const anunt = {
+  titlu: titlu,
+  descriere: document.getElementById("descriere").value.trim(),
+  pret: pret,
+  categorie: document.getElementById("categorie").value,
+  localitate: document.getElementById("localitate").value.trim(),
+  imagine_url: await incarcaFotografie(
+    document.getElementById("fotografie").files[0]
+  )
+};
+
+         };
 
       buton.disabled = true;
       mesaj.textContent = "Se publică anunțul...";
