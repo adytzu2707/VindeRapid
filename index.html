@@ -4,78 +4,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VindeRapid — Anunțuri</title>
+<title>VindeRapid</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font:16px Arial,sans-serif;background:#f2f5fa;color:#17243a}
-header{background:linear-gradient(120deg,#155bd4,#12a6d8);color:white;padding:25px 16px}
-main{max-width:900px;margin:20px auto;padding:0 14px}
-h1{margin:0 0 8px;font-size:30px}
-h2{font-size:21px}
-.panel,.ad{background:white;border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 3px 12px #0000000c}
-input,select,textarea,button{width:100%;padding:12px;margin:5px 0;border:1px solid #d5dce7;border-radius:9px;font-size:16px}
-button{background:#1769e0;color:white;border:0;font-weight:bold}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.price{color:#1769e0;font-size:21px;font-weight:bold}
-.small{font-size:13px;color:#687386}
+body{font-family:Arial,sans-serif;margin:0;background:#f3f5f7;color:#222}
+header{background:#087f5b;color:white;padding:22px 16px;text-align:center}
+header h1{margin:0;font-size:30px}
+header p{margin:8px 0 0}
+main{max-width:760px;margin:auto;padding:16px}
+.card{background:white;padding:16px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 8px #0001}
+h2{margin-top:0;font-size:20px}
+input,textarea,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:16px}
+button{background:#087f5b;color:white;border:0;font-weight:bold}
+.ad{border-bottom:1px solid #ddd;padding:12px 0}
+.price{color:#087f5b;font-size:20px;font-weight:bold}
+small{color:#666}
 </style>
 </head>
 <body>
 <header>
-<h1>⚡ VindeRapid</h1>
-<p>Cumperi și vinzi simplu, rapid și aproape de tine.</p>
-<input id="q" placeholder="Ce cauți?" oninput="showAds()">
-<select id="cat" onchange="showAds()">
-<option value="">Toate categoriile</option>
-<option>Electronice</option><option>Auto</option>
-<option>Casă și grădină</option><option>Modă</option><option>Altele</option>
-</select>
+<h1>VindeRapid</h1>
+<p>Anunțuri simple, rapid și gratuit</p>
 </header>
 <main>
-<section class="panel">
+<section class="card">
 <h2>Publică un anunț</h2>
 <form id="form">
-<input id="title" placeholder="Titlul anunțului" required>
-<input id="price" type="number" min="0" placeholder="Preț în lei" required>
-<select id="category">
-<option>Electronice</option><option>Auto</option>
-<option>Casă și grădină</option><option>Modă</option><option>Altele</option>
+<input id="titlu" placeholder="Titlul anunțului" maxlength="120" required>
+<textarea id="descriere" placeholder="Descrierea produsului" maxlength="3000"></textarea>
+<input id="pret" type="number" min="0" step="0.01" placeholder="Preț în lei" required>
+<select id="categorie">
+<option>Altele</option><option>Electronice</option><option>Auto</option>
+<option>Casă și grădină</option><option>Unelte</option><option>Modă</option>
 </select>
-<input id="city" placeholder="Localitate">
-<textarea id="desc" placeholder="Descrierea produsului"></textarea>
-<button type="submit">Adaugă anunț</button>
+<input id="localitate" placeholder="Localitate">
+<button type="submit">Publică anunțul</button>
+<p id="mesaj" aria-live="polite"></p>
 </form>
 </section>
-<h2>Anunțuri disponibile</h2>
-<div id="ads" class="grid"></div>
-<section class="panel">
-<h2>Promovează-ți anunțul</h2>
-<p>Promovare 3 zile — 5 lei</p>
-<p>Promovare 7 zile — 10 lei</p>
-<p>Promovare 30 zile — 20 lei</p>
-<p class="small">Prețuri demonstrative. Plățile online nu sunt încă activate.</p>
-</section>
-<section class="panel small">
-VindeRapid — versiune inițială. În această versiune, anunțurile adăugate sunt salvate în browserul dispozitivului. Pentru conturi, anunțuri vizibile tuturor și plăți reale va fi nevoie de servicii suplimentare.
+<section class="card">
+<h2>Anunțuri publicate</h2>
+<input id="cautare" placeholder="Caută un anunț..." >
+<div id="anunturi">Se încarcă anunțurile...</div>
 </section>
 </main>
 <script>
-let ads=[];
-try{ads=JSON.parse(localStorage.getItem("vinderapid_ads")||"[]")}catch(e){}
-function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function showAds(){
-let q=document.getElementById("q").value.toLowerCase();
-let cat=document.getElementById("cat").value;
-let list=ads.filter(a=>(a.title+" "+a.desc+" "+a.city).toLowerCase().includes(q)&&(!cat||a.category===cat));
-document.getElementById("ads").innerHTML=list.map(a=>'<article class="ad"><h3>'+safe(a.title)+'</h3><div class="price">'+safe(a.price)+' lei</div><p>'+safe(a.desc)+'</p><div class="small">'+safe(a.category)+' · '+safe(a.city||"România")+'</div></article>').join("")||'<p>Nu există anunțuri. Adaugă primul anunț!</p>';
+const URL_SUPABASE = "https://ktcshtvohgxmupmyvcth.supabase.co";
+const CHEIE_PUBLICA = "sb_publishable_nS4V4SsKyG1wvtFplQQoKg_CTJSaBpr";
+const lista = document.getElementById("anunturi");
+const mesaj = document.getElementById("mesaj");
+let anunturi = [];
+
+async function cerere(path, options={}) {
+  const raspuns = await fetch(URL_SUPABASE + "/rest/v1/" + path, {
+    ...options,
+    headers: {
+      apikey: CHEIE_PUBLICA,
+      Authorization: "Bearer " + CHEIE_PUBLICA,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  if (!raspuns.ok) throw new Error(await raspuns.text());
+  return raspuns.status === 204 ? null : raspuns.json();
 }
-document.getElementById("form").addEventListener("submit",function(e){
-e.preventDefault();
-ads.unshift({title:document.getElementById("title").value,price:document.getElementById("price").value,category:document.getElementById("category").value,city:document.getElementById("city").value,desc:document.getElementById("desc").value});
-try{localStorage.setItem("vinderapid_ads",JSON.stringify(ads))}catch(e){}
-this.reset();showAds();
+
+function sigur(text) {
+  return String(text ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function afiseaza() {
+  const cautare = document.getElementById("cautare").value.toLowerCase().trim();
+  const filtrate = anunturi.filter(a =>
+    [a.titlu,a.descriere,a.categorie,a.localitate]
+      .some(v => String(v || "").toLowerCase().includes(cautare))
+  );
+  lista.innerHTML = filtrate.length ? filtrate.map(a => `
+    <article class="ad">
+      <h3>${sigur(a.titlu)}</h3>
+      <div class="price">${sigur(a.pret)} lei</div>
+      <p>${sigur(a.descriere)}</p>
+      <small>${sigur(a.categorie)} · ${sigur(a.localitate || "Localitate nespecificată")}</small>
+    </article>`).join("") : "Nu există anunțuri. Poți publica primul!";
+}
+
+async function incarca() {
+  try {
+    anunturi = await cerere("anunturi?select=*&order=creat_la.desc");
+    afiseaza();
+  } catch (e) {
+    lista.textContent = "Nu s-au putut încărca anunțurile. Verifică cheia publică și setările tabelului Supabase.";
+    console.error(e);
+  }
+}
+
+document.getElementById("cautare").addEventListener("input", afiseaza);
+
+document.getElementById("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  mesaj.textContent = "Se publică...";
+  const pret = Number(document.getElementById("pret").value);
+  if (!Number.isFinite(pret) || pret < 0) {
+    mesaj.textContent = "Introdu un preț valid.";
+    return;
+  }
+  const date = {
+    titlu: document.getElementById("titlu").value.trim(),
+    descriere: document.getElementById("descriere").value.trim(),
+    pret,
+    categorie: document.getElementById("categorie").value,
+    localitate: document.getElementById("localitate").value.trim()
+  };
+  try {
+    await cerere("anunturi", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(date)
+    });
+    mesaj.textContent = "Anunț publicat cu succes!";
+    e.target.reset();
+    await incarca();
+  } catch (err) {
+    mesaj.textContent = "Publicarea a eșuat. Verifică politicile și permisiunile Supabase.";
+    console.error(err);
+  }
 });
-showAds();
+
+incarca();
 </script>
 </body>
 </html>
