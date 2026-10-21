@@ -212,6 +212,20 @@ async function incarcaFotografie(fisier) {
           (a.categorie || "Altele") +
           (a.localitate ? " • " + a.localitate : "");
 
+if (a.imagine_url) {
+  const imagine = document.createElement("img");
+  imagine.src = a.imagine_url;
+  imagine.alt = a.titlu || "Fotografia anunțului";
+  imagine.loading = "lazy";
+  imagine.style.width = "100%";
+  imagine.style.maxHeight = "280px";
+  imagine.style.objectFit = "contain";
+  imagine.style.borderRadius = "8px";
+  card.append(imagine);
+}
+
+card.append(titlu, pret, descriere, detalii);
+
         card.append(titlu, pret, descriere, detalii);
         lista.appendChild(card);
       });
