@@ -1,293 +1,152 @@
 
 <!DOCTYPE html>
-<html lang="ro"> 
+<html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VindeRapid - Anunțuri gratuite</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f4f7;
-      color: #222;
-    }
-    header {
-      background: #087f5b;
-      color: white;
-      text-align: center;
-      padding: 24px 12px;
-    }
-    header h1 { margin: 0 0 8px; }
-    main {
-      width: 92%;
-      max-width: 650px;
-      margin: 20px auto;
-    }
-    .panou {
-      background: white;
-      padding: 18px;
-      margin-bottom: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px #00000010;
-    }
-    input, textarea, select, button {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 16px;
-      border-radius: 7px;
-    }
-    input, textarea, select {
-      border: 1px solid #ccc;
-      background: white;
-    }
-    button {
-      background: #087f5b;
-      color: white;
-      border: 0;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:disabled { opacity: .6; }
-    .anunt {
-      border: 1px solid #ddd;
-      padding: 14px;
-      border-radius: 8px;
-      margin: 12px 0;
-      overflow-wrap: anywhere;
-    }
-    .pret {
-      color: #087f5b;
-      font-size: 21px;
-      font-weight: bold;
-    }
-    #mesaj { overflow-wrap: anywhere; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VindeRapid</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f1f5f9;color:#17212b}
+header{background:#0f766e;color:white;padding:24px 15px;text-align:center}
+main{max-width:700px;margin:auto;padding:15px}
+.card{background:white;padding:18px;margin:15px 0;border-radius:12px}
+label{display:block;margin-top:12px;font-weight:bold}
+input,textarea,select,button{box-sizing:border-box;width:100%;padding:12px;margin-top:7px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+textarea{min-height:90px}
+button{background:#0f766e;color:white;border:0;font-weight:bold;margin-top:16px}
+.anunt{border:1px solid #ddd;border-radius:8px;padding:12px;margin-top:12px;overflow-wrap:anywhere}
+.pret{font-size:20px;font-weight:bold;color:#0f766e}
+</style>
 </head>
 <body>
-  <header>
-    <h1>VindeRapid</h1>
-    <div>Publică și găsește anunțuri gratuit!</div>
-  </header>
+<header>
+<h1>VindeRapid</h1>
+<p>Publică rapid. Vinde rapid.</p>
+</header>
+<main>
+<section class="card">
+<h2>Publică un anunț</h2>
+<form id="formular">
+<label for="titlu">Titlu</label>
+<input id="titlu" maxlength="120" required>
+<label for="descriere">Descriere</label>
+<textarea id="descriere" maxlength="3000" required></textarea>
+<label for="pret">Preț (lei)</label>
+<input id="pret" type="number" min="0" step="0.01" required>
+<label for="categorie">Categorie</label>
+<select id="categorie" required>
+<option value="">Alege categoria</option>
+<option>Auto</option><option>Electronice</option>
+<option>Casă și grădină</option><option>Unelte</option>
+<option>Modă</option><option>Imobiliare</option>
+<option>Servicii</option><option>Altele</option>
+</select>
+<label for="localitate">Localitate</label>
+<input id="localitate" maxlength="100" required>
+<button id="buton" type="submit">Publică anunțul</button>
+</form>
+<p id="mesaj"></p>
+</section>
+<section class="card">
+<h2>Anunțuri publicate</h2>
+<p id="status">Se verifică baza de date...</p>
+<div id="lista"></div>
+</section>
+</main>
+<script>
+const URL_SUPABASE="https://ktcshtvohgxmupmyvcth.supabase.co";
+const CHEIE_PUBLICA="sb_publishable_nS4V4SsKyG1wvtFplQQoKg_CTJSaBpr";
 
-  <main>
-    <section class="panou">
-      <h2>Publică un anunț</h2>
-      <form id="formular">
-        <input id="titlu" maxlength="120"
-          placeholder="Titlul anunțului" required>
+const formular=document.getElementById("formular");
+const mesaj=document.getElementById("mesaj");
+const lista=document.getElementById("lista");
+const statusLista=document.getElementById("status");
+const buton=document.getElementById("buton");
 
-        <textarea id="descriere" maxlength="3000"
-          placeholder="Descrierea produsului"></textarea>
-
-        <input id="pret" type="number" min="0" step="0.01"
-          placeholder="Preț în lei" required>
-
-        <select id="categorie">
-          <option value="Altele">Altele</option>
-          <option value="Electronice">Electronice</option>
-          <option value="Auto">Auto</option>
-          <option value="Casa si gradina">Casă și grădină</option>
-          <option value="Unelte">Unelte</option>
-          <option value="Haine">Haine</option>
-        </select>
-
-        <input id="localitate" maxlength="100"
-          placeholder="Localitate">
-<label for="fotografie">Fotografia anunțului:</label>
-<input id="fotografie" type="file"
-       accept="image/jpeg,image/png,image/webp">
-        <button id="buton" type="submit">Publică anunțul</button>
-      </form>
-      <p id="mesaj" role="status">Pregătire...</p>
-    </section>
-
-    <section class="panou">
-      <h2>Anunțuri disponibile</h2>
-      <div id="lista">Se încarcă anunțurile...</div>
-    </section>
-  </main>
-
-  <script>
-   
-    const URL_SUPABASE =
-      "https://ktcshtvohgxmupmyvcth.supabase.co";
-
-    const CHEIE_PUBLICA =
-      
-sb_publishable_nS4V4SsKyG1wvtFplQQoKg_CTJSaBpr
-    
-    const mesaj = document.getElementById("mesaj");
-    const lista = document.getElementById("lista");
-    const formular = document.getElementById("formular");
-    const buton = document.getElementById("buton");
-sb_publishable_nS4V4SsKyG1wvtFplQQoKg_CTJSaBpr
-    async function cerere(path, options = {}) {
-      const raspuns = await fetch(
-        URL_SUPABASE + "/rest/v1/" + path,
-        {
-          ...options,
-          headers: {
-            apikey: CHEIE_PUBLICA,
-            Authorization: "Bearer " + CHEIE_PUBLICA,
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-          }
-        }
-      );
-
-      const text = await raspuns.text();
-
-      if (!raspuns.ok) {
-        throw new Error("HTTP " + raspuns.status + ": " + text);
-      }
-
-      return text ? JSON.parse(text) : null;
-    }
-
-    function afiseazaAnunturi(anunturi) {
-      lista.replaceChildren();
-
-      if (!anunturi || anunturi.length === 0) {
-        lista.textContent = "Momentan nu există anunțuri.";
-        return;
-      }
-async function incarcaFotografie(fisier) {
-  if (!fisier) return null;
-
-  if (!fisier.type.startsWith("image/")) {
-    throw new Error("Selectează un fișier imagine.");
+async function cerere(path,options={}){
+ if(!CHEIE_PUBLICA.startsWith("sb_publishable_")){
+  throw new Error("Cheia publică nu este configurată.");
+ }
+ const r=await fetch(URL_SUPABASE+"/rest/v1/"+path,{
+  ...options,
+  headers:{
+   apikey:CHEIE_PUBLICA,
+   Authorization:"Bearer "+CHEIE_PUBLICA,
+   "Content-Type":"application/json",
+   ...(options.headers||{})
   }
-
-  if (fisier.size > 5 * 1024 * 1024) {
-    throw new Error("Fotografia trebuie să aibă maximum 5 MB.");
-  }
-
-  const numeFisier =
-    Date.now() + "-" +
-    fisier.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-  const raspuns = await fetch(
-    URL_SUPABASE + "/storage/v1/object/poze-anunturi/" +
-      numeFisier,
-    {
-      method: "POST",
-      headers: {
-        apikey: CHEIE_PUBLICA,
-        Authorization: "Bearer " + CHEIE_PUBLICA,
-        "Content-Type": fisier.type
-      },
-      body: fisier
-    }
-  );
-
-  if (!raspuns.ok) {
-    throw new Error("Încărcarea fotografiei: " +
-      await raspuns.text());
-  }
-
-  return URL_SUPABASE +
-    "/storage/v1/object/public/poze-anunturi/" +
-    numeFisier;
+ });
+ if(!r.ok)throw new Error("Eroare "+r.status+": "+await r.text());
+ if(r.status===204)return null;
+ return r.json();
 }
 
-
-      anunturi.forEach(function(a) {
-        const card = document.createElement("article");
-        card.className = "anunt";
-
-        const titlu = document.createElement("h3");
-        titlu.textContent = a.titlu || "Fără titlu";
-
-        const pret = document.createElement("p");
-        pret.className = "pret";
-        pret.textContent = Number(a.pret).toLocaleString("ro-RO") + " lei";
-
-        const descriere = document.createElement("p");
-        descriere.textContent = a.descriere || "";
-
-        const detalii = document.createElement("small");
-        detalii.textContent =
-          (a.categorie || "Altele") +
-          (a.localitate ? " • " + a.localitate : "");
-
-
-  card.append(imagine);
+function text(tag,value,clasa=""){
+ const e=document.createElement(tag);
+ e.textContent=value??"";
+ if(clasa)e.className=clasa;
+ return e;
 }
 
-card.append(titlu, pret, descriere, detalii);
+function afiseaza(anunturi){
+ lista.replaceChildren();
+ if(!anunturi.length){
+  lista.appendChild(text("p","Nu există încă anunțuri."));
+  return;
+ }
+ for(const a of anunturi){
+  const card=document.createElement("article");
+  card.className="anunt";
+  card.appendChild(text("h3",a.titlu));
+  card.appendChild(text("p",Number(a.pret).toLocaleString("ro-RO")+" lei","pret"));
+  card.appendChild(text("p",a.descriere));
+  card.appendChild(text("p","Categorie: "+a.categorie));
+  card.appendChild(text("p","Localitate: "+a.localitate));
+  lista.appendChild(card);
+ }
+}
 
-        card.append(titlu, pret, descriere, detalii);
-        lista.appendChild(card);
-      });
-    }
-  async function incarcaAnunturi() {
-      lista.textContent = "Se încarcă anunțurile...";
-      mesaj.textContent = "";
+async function incarcaAnunturi(){
+ statusLista.textContent="Se încarcă anunțurile...";
+ try{
+  const a=await cerere("anunturi?select=id,titlu,descriere,pret,categorie,localitate,creat_la&order=creat_la.desc");
+  afiseaza(a||[]);
+  statusLista.textContent="Anunțuri încărcate: "+a.length;
+ }catch(e){
+  statusLista.textContent="Nu s-au putut încărca anunțurile.";
+  lista.replaceChildren();
+  lista.appendChild(text("p",e.message));
+ }
+}
 
-      try {
-        const anunturi = await cerere(
-          "anunturi?select=*&order=creat_la.desc"
-        );
-        afiseazaAnunturi(anunturi);
-      } catch (err) {
-        lista.textContent = "Nu s-au putut încărca anunțurile.";
-        mesaj.textContent = "Eroare la încărcare: " + err.message;
-      }
-    }
+formular.addEventListener("submit",async function(event){
+ event.preventDefault();
+ buton.disabled=true;
+ mesaj.textContent="Se publică anunțul...";
+ try{
+  const a={
+   titlu:document.getElementById("titlu").value.trim(),
+   descriere:document.getElementById("descriere").value.trim(),
+   pret:Number(document.getElementById("pret").value),
+   categorie:document.getElementById("categorie").value,
+   localitate:document.getElementById("localitate").value.trim()
+  };
+  await cerere("anunturi",{
+   method:"POST",
+   headers:{Prefer:"return=minimal"},
+   body:JSON.stringify(a)
+  });
+  mesaj.textContent="Anunțul a fost publicat!";
+  formular.reset();
+  await incarcaAnunturi();
+ }catch(e){
+  mesaj.textContent="Eroare la publicare: "+e.message;
+ }finally{
+  buton.disabled=false;
+ }
+});
 
-    formular.addEventListener("submit", async function(e) {
-      e.preventDefault();
-
-      const titlu = document.getElementById("titlu").value.trim();
-      const pret = Number(document.getElementById("pret").value);
-
-      if (!titlu || !Number.isFinite(pret) || pret < 0) {
-        mesaj.textContent = "Completează corect titlul și prețul.";
-        return;
-      }
-
-      const anunt = {
-  titlu: titlu,
-  descriere: document.getElementById("descriere").value.trim(),
-  pret: pret,
-  categorie: document.getElementById("categorie").value,
-  localitate: document.getElementById("localitate").value.trim()
-};
-  
-  imagine_url: await incarcaFotografie(
-    document.getElementById("fotografie").files[0]
-  )
-};
-
-         };
-
-      buton.disabled = true;
-      mesaj.textContent = "Se publică anunțul...";
-
-      try {
-        await cerere("anunturi", {
-          method: "POST",
-          headers: {
-            Prefer: "return=minimal"
-          },
-          body: JSON.stringify(anunt)
-        });
-
-        mesaj.textContent = "Anunț publicat cu succes!";
-        formular.reset();
-        await incarcaAnunturi();
-      } catch (err) {
-        mesaj.textContent = "Publicare eșuată: " + err.message;
-      } finally {
-        buton.disabled = false;
-      }
-    });
-
-    incarcaAnunturi();
-  </script>
+incarcaAnunturi();
+</script>
 </body>
 </html>
